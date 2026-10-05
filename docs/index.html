@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DART-Ziele AMR – Folienbericht</title>
+<meta name="description" content="Erzeugt aus einer Excel-Tabelle die Folie „Wo stehen wir heute?“ zu den DART-Zielen Antibiotika-Resistenz als PDF.">
+<style>
+  :root {
+    --blau: #045AA6;
+    --blau-dunkel: #03457F;
+    --blau-hell: #EBF2F8;
+    --blau-mittel: #C0D5E8;
+    --text: #1F2A36;
+    --grau: #5B6670;
+    --linie: #D9DEE3;
+    --fehler: #B3261E;
+    --ok: #2E6B30;
+    --bg: #F5F7F9;
+    --karte: #FFFFFF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --blau: #5B9BD5;
+      --blau-dunkel: #8DB9E2;
+      --blau-hell: #16283A;
+      --blau-mittel: #2A4560;
+      --text: #E6EAEE;
+      --grau: #A7B1BA;
+      --linie: #34404C;
+      --fehler: #F2B8B5;
+      --ok: #9CD39E;
+      --bg: #11171D;
+      --karte: #1A222B;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  header {
+    background: #045AA6;
+    color: #fff;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+  header .wrap { padding-top: 28px; padding-bottom: 28px; }
+  header h1 { margin: 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.01em; }
+  header p { margin: 6px 0 0; opacity: .9; max-width: 640px; }
+  main { padding: 28px 0 48px; }
+  .karte {
+    background: var(--karte);
+    border: 1px solid var(--linie);
+    border-top: 4px solid var(--blau);
+    padding: 22px 24px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    margin: 0 0 14px;
+    font-size: 1.15rem;
+    color: var(--blau);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nr {
+    display: inline-grid; place-items: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--blau); color: #fff; font-size: .85rem;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nr { color: #11171D; } }
+  .drop {
+    border: 2px dashed var(--blau-mittel);
+    background: var(--blau-hell);
+    padding: 28px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .15s;
+  }
+  .drop:hover, .drop.aktiv { border-color: var(--blau); }
+  .drop strong { color: var(--blau); }
+  .drop small { display: block; color: var(--grau); margin-top: 4px; }
+  input[type=file] { display: none; }
+  .hinweis { color: var(--grau); font-size: .9rem; margin: 10px 0 0; }
+  a { color: var(--blau); }
+  .meldung { margin-top: 12px; font-size: .95rem; }
+  .meldung.fehler { color: var(--fehler); }
+  .meldung.ok { color: var(--ok); }
+  .tabelle-box { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 10px; border-bottom: 1px solid var(--linie); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { background: var(--blau-hell); color: var(--blau-dunkel); font-weight: 600; }
+  .felder { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px 20px; }
+  label { display: block; font-size: .85rem; color: var(--grau); margin-bottom: 4px; }
+  input[type=text], input[type=number] {
+    width: 100%; padding: 9px 10px; font: inherit; color: var(--text);
+    background: var(--karte); border: 1px solid var(--linie);
+  }
+  input:focus { outline: 2px solid var(--blau); outline-offset: -1px; }
+  .knoepfe { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  button, .knopf {
+    font: inherit; font-weight: 600; padding: 10px 18px; cursor: pointer;
+    border: 1px solid var(--blau); background: var(--blau); color: #fff; text-decoration: none;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button, :root:not([data-theme="light"]) .knopf { color: #11171D; } }
+  button.sekundaer { background: transparent; color: var(--blau); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  iframe { width: 100%; aspect-ratio: 297 / 210; border: 1px solid var(--linie); background: #fff; margin-top: 16px; }
+  .versteckt { display: none; }
+  footer { border-top: 1px solid var(--linie); color: var(--grau); font-size: .85rem; }
+  footer .wrap { padding-top: 18px; padding-bottom: 28px; }
+  code { font-size: .9em; background: var(--blau-hell); padding: 1px 4px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>DART-Ziele Antibiotika-Resistenz</h1>
+    <p>Excel-Tabelle hochladen und daraus die Folie „Wo stehen wir heute?“ als PDF erzeugen. Die Daten werden ausschließlich im Browser verarbeitet und nicht übertragen.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="karte">
+    <h2><span class="nr">1</span>Excel-Datei auswählen</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Excel-Datei auswählen">
+      <strong>Datei hierher ziehen</strong> oder klicken zum Auswählen
+      <small>.xlsx – erstes Tabellenblatt wird gelesen</small>
+    </div>
+    <input type="file" id="datei" accept=".xlsx,.xls">
+    <p class="hinweis">Erwarteter Aufbau: Spalte <code>drug_bug</code> mit den Codes <code>3GCECOLI</code>, <code>CRKP</code>, <code>MRSA</code>, <code>VRE</code>, danach je Jahr eine Spalte (2019, 2020, …), zuletzt der absolute Zielwert 2030 (<code>target_abs</code>). <a href="#" id="vorlage">Leere Vorlage herunterladen</a></p>
+    <div class="meldung" id="meldung" role="status"></div>
+  </section>
+
+  <section class="karte versteckt" id="schritt2">
+    <h2><span class="nr">2</span>Daten prüfen</h2>
+    <div class="tabelle-box"><table id="tabelle"></table></div>
+  </section>
+
+  <section class="karte versteckt" id="schritt3">
+    <h2><span class="nr">3</span>Folie anpassen und PDF erzeugen</h2>
+    <div class="felder">
+      <div><label for="f-titel">Folientitel</label><input type="text" id="f-titel" value="Wo stehen wir heute?"></div>
+      <div><label for="f-datum">Datum (Fußzeile)</label><input type="text" id="f-datum"></div>
+      <div><label for="f-fuss">Fußzeilentext</label><input type="text" id="f-fuss" value="DART Ziele Antibiotikar-Resistenz"></div>
+      <div><label for="f-seite">Seitenzahl</label><input type="text" id="f-seite" value="5"></div>
+    </div>
+    <div class="knoepfe">
+      <button id="erzeugen">PDF erzeugen</button>
+      <button id="laden" class="sekundaer" disabled>PDF herunterladen</button>
+    </div>
+    <iframe id="vorschau" class="versteckt" title="PDF-Vorschau"></iframe>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    Verwendete Bibliotheken: <a href="https://github.com/parallax/jsPDF">jsPDF</a> (MIT), <a href="https://github.com/SheetJS/sheetjs">SheetJS</a> (Apache-2.0).
+  </div>
+</footer>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
